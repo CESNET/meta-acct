@@ -1,0 +1,210 @@
+acct-meta (0.2.0) UNRELEASED; urgency=medium
+
+  * nova verze accountingu
+  * prechod z rsh na swift
+
+ -- Michal Svamberg <svamberg@civ.zcu.cz>  Thu, 3 Feb 2018 23:07:56 +0100
+
+acct-meta (0.1.31~deb8) UNRELEASED; urgency=medium
+
+  * oprava verze, balik podporuje jen deb8 
+
+ -- Michal Svamberg <svamberg@civ.zcu.cz>  Thu, 11 Jan 2018 16:03:56 +0100
+
+acct-meta (0.1.30) unstable; urgency=low
+
+  * oprava zavislosti pro heimdal-client
+
+ -- Michal Svamberg <svamberg@civ.zcu.cz>  Wed, 29 Jun 2016 10:49:07 +0200
+
+acct-meta (0.1.29) unstable; urgency=low
+
+  * oprava zavislosti mezi heimdal-rsh (deb8+) a heimdal-client (deb7-) 
+
+ -- Michal Svamberg <svamberg@civ.zcu.cz>  Wed, 29 Jun 2016 10:23:10 +0200
+
+acct-meta (0.1.28) unstable; urgency=low
+
+  * oprava detekce zda je pacct soubor komprimovany 
+  * odeslani accounting dat az po validaci
+
+ -- Michal Svamberg <svamberg@civ.zcu.cz>  Tue, 28 Jun 2016 13:41:25 +0200
+
+acct-meta (0.1.27) unstable; urgency=low
+
+  * pridana zavislost na rsh-client
+
+ -- Michal Svamberg <svamberg@civ.zcu.cz>  Thu, 09 Jun 2016 16:20:22 +0200
+
+acct-meta (0.1.26) unstable; urgency=low
+
+  * Uprava pro spravnou funkci na debian8, viz RT#163432
+
+ -- Michal Svamberg <svamberg@civ.zcu.cz>  Thu, 09 Jun 2016 16:09:04 +0200
+
+acct-meta (0.1.25) unstable; urgency=low
+
+  * Ne vsude se pouziva defaultni realm @META, doplnena detekce spravneho realmu.
+
+ -- Michal Svamberg <svamberg@civ.zcu.cz>  Fri, 08 Jan 2016 15:55:35 +0100
+
+acct-meta (0.1.24) unstable; urgency=low
+
+  * Upravy dle pozadavku RT#144840 (cesty a zpracovani vystupu klist)
+
+ -- Michal Svamberg <svamberg@civ.zcu.cz>  Fri, 08 Jan 2016 00:42:54 +0100
+
+acct-meta (0.1.23) unstable; urgency=low
+
+  * Oprava detekce zasilani logu 
+
+ -- Michal Svamberg <svamberg@civ.zcu.cz>  Wed, 17 Jun 2015 19:10:46 +0200
+
+acct-meta (0.1.22) unstable; urgency=medium
+
+  * RT#96757: zakomentovani odesilani dat na server, nadale vyuzivano pouze ulozeni na DU
+
+ -- Michal Svamberg <svamberg@civ.zcu.cz>  Sun, 19 Oct 2014 12:43:55 +0200
+
+acct-meta (0.1.21) unstable; urgency=medium
+
+  * RT#94653: rozsireni nahodneho casu spusteni na 20hod (10x vic)
+
+ -- Michal Svamberg <svamberg@civ.zcu.cz>  Fri, 19 Sep 2014 12:26:34 +0200
+
+acct-meta (0.1.20) unstable; urgency=medium
+
+  * RT#92688: odstraneni zbytecne dekomprese a komprese
+  * RT#92688: odeslani souboru kontrolovano na odpoved serveru
+  * vylepseny logovaci hlaseni 
+
+ -- Michal Svamberg <svamberg@civ.zcu.cz>  Fri, 22 Aug 2014 10:43:08 +0200
+
+acct-meta (0.1.19) unstable; urgency=low
+
+  * oprava vystupu meta-acct, kdy generoval dump misto json formatu 
+
+ -- Michal Svamberg <svamberg@civ.zcu.cz>  Wed, 06 Aug 2014 10:53:15 +0200
+
+acct-meta (0.1.18) unstable; urgency=medium
+
+  * Pokud je chyba v zdrojovem souboru (neznama verze), pak se zaznam pouze preskoci
+    misto ukonceni celeho programu. 
+
+ -- Michal Svamberg <svamberg@civ.zcu.cz>  Fri, 11 Jul 2014 10:38:05 +0200
+
+acct-meta (0.1.17) unstable; urgency=medium
+
+  * Pridana zavislost na heimdal-clients (z duvodu kauth a rsh)
+  * Oprava popisku 
+
+ -- Michal Svamberg <svamberg@civ.zcu.cz>  Mon, 23 Jun 2014 14:24:34 +0200
+
+acct-meta (0.1.16) unstable; urgency=medium
+
+  * Oprava chyby pri mazani docasneho souboru
+  * Pridan test navratove hodnoty pro rsh na acct.metacentrum.cz
+
+ -- Michal Svamberg <svamberg@civ.zcu.cz>  Mon, 23 Jun 2014 14:05:06 +0200
+
+acct-meta (0.1.15) unstable; urgency=medium
+
+  * Oprava cest k binarkam, z cronu neni nastavena cesta /usr/sbin/.
+
+ -- Michal Svamberg <svamberg@civ.zcu.cz>  Fri, 20 Jun 2014 10:44:59 +0200
+
+acct-meta (0.1.14) unstable; urgency=medium
+
+  * Pridano odesilani accounting na server acct, ktery to ulozi do DU
+
+ -- Michal Svamberg <svamberg@civ.zcu.cz>  Wed, 18 Jun 2014 14:36:42 +0200
+
+acct-meta (0.1.13) unstable; urgency=low
+
+  * zlepseno logovani
+  * oprava podminky pro test 
+
+ -- Michal Svamberg <svamberg@civ.zcu.cz>  Wed, 02 Apr 2014 18:50:00 +0200
+
+acct-meta (0.1.12) unstable; urgency=low
+
+  * zavislost na yajl-tools (json_verify), testuje se validita JSON pred
+    odeslanim
+  * pridani 'set -e'
+
+ -- Michal Svamberg <svamberg@civ.zcu.cz>  Mon, 17 Mar 2014 13:53:55 +0100
+
+acct-meta (0.1.11) unstable; urgency=low
+
+  * pridana zavislost na libjson-perl, pri buildu nezafunovala detekce
+
+ -- Michal Svamberg <svamberg@civ.zcu.cz>  Fri, 14 Mar 2014 17:57:11 +0100
+
+acct-meta (0.1.10) unstable; urgency=low
+
+  * zmena URL pro odesilani vysledku dle 
+    https://rt4.cesnet.cz/rt/Ticket/Display.html?id=76180
+
+ -- Michal Svamberg <svamberg@civ.zcu.cz>  Tue, 04 Mar 2014 10:45:02 +0100
+
+acct-meta (0.1.9) unstable; urgency=low
+
+  * oprava nedefinovane promenne 
+
+ -- Michal Svamberg <svamberg@civ.zcu.cz>  Wed, 19 Feb 2014 23:25:50 +0100
+
+acct-meta (0.1.8) unstable; urgency=low
+
+  * fix missing dh_installdirs
+
+ -- Michal Svamberg <svamberg@civ.zcu.cz>  Mon, 09 Dec 2013 17:55:40 +0100
+
+acct-meta (0.1.7) unstable; urgency=low
+
+  * fix dh_install (missing files from debian/*.install in package)
+
+ -- Michal Svamberg <svamberg@civ.zcu.cz>  Wed, 04 Dec 2013 16:38:33 +0100
+
+acct-meta (0.1.6) unstable; urgency=low
+
+  * fix one-sec filter, time isn't in usec, time stored in hundredth
+  * add manpages to package 
+
+ -- Michal Svamberg <svamberg@civ.zcu.cz>  Fri, 22 Nov 2013 09:28:23 +0100
+
+acct-meta (0.1.5) unstable; urgency=low
+
+  * add MAILTO in cron.d 
+
+ -- Michal Svamberg <svamberg@civ.zcu.cz>  Thu, 31 Oct 2013 11:52:18 +0100
+
+acct-meta (0.1.4) unstable; urgency=low
+
+  * fix ordering files in search, oldest is first now 
+  * output of curl going to /dev/null now
+
+ -- Michal Svamberg <svamberg@civ.zcu.cz>  Thu, 31 Oct 2013 11:37:57 +0100
+
+acct-meta (0.1.3) unstable; urgency=low
+
+  * fix search files - missing sort by date
+
+ -- Michal Svamberg <svamberg@civ.zcu.cz>  Thu, 31 Oct 2013 11:33:16 +0100
+
+acct-meta (0.1.2) unstable; urgency=low
+
+  * fix cron script: search files in actual dir, not in accounting
+
+ -- Michal Svamberg <svamberg@civ.zcu.cz>  Thu, 31 Oct 2013 11:19:47 +0100
+
+acct-meta (0.1.1) unstable; urgency=low
+
+  * fix path in cron.d 
+
+ -- Michal Svamberg <svamberg@civ.zcu.cz>  Thu, 31 Oct 2013 11:10:37 +0100
+
+acct-meta (0.1) unstable; urgency=low
+
+  * Initial Release.
+
+ -- Michal Svamberg <svamberg@civ.zcu.cz>  Fri, 20 Sep 2013 13:10:44 +0200

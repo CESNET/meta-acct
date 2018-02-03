@@ -1,0 +1,90 @@
+#!/bin/bash
+SWIFT=`which swift`
+SWIFT_ADMINS="pacctator\$pacctator"
+TSFILE=/var/lib/acct-meta/timestamp # timestamp soubor, ktery posledni se delal
+PACCTDIR=/var/log/account/
+
+warn () {
+    echo "$0:" "$@" >&2
+    logger "$0: $@" # zaznam do syslogu
+}
+die () {
+    rc=$1
+    shift
+    warn "$@"
+    exit $rc
+}
+
+# test na swift
+test -x "$SWIFT" || die 1 "Neexistuje swift program, nelze nahrat data."
+
+# zalozeni promenne a docasneho souboru
+krb5_cc=$(mktemp -p /tmp -q krb5cc_pacct_XXXXXXXX) || die 2 "Nepodarilo se vytvorit docasny soubor '/tmp/krb5cc_pacct_*'." 
+trap "rm -f -- '$krb5_cc'" EXIT
+
+# ziskani listku, jako root nemam problem :-)
+export KRB5CCNAME=$krb5_cc
+krb5_realm=`awk -v host=$(hostname -f) 'BEGIN {parse=0; rel=10000}; /default_realm/ {realm = $3}; /^\[/ {if (parse == 1) { parse=0} }; /=/ {m=match(host, $1); if (m !=0  && parse == 1 ) { if (m <rel) {rel=m; realm=$3} } } ; /domain_realm/ {parse=1}; END {print realm}' /etc/krb5.conf`
+principal="host/$HOSTNAME@$krb5_realm"
+#principal="host/$HOSTNAME@`ktutil list | grep host/$HOSTNAME | awk -F '@' '{print $2}' | head -n 1`"
+kinit -k -t /etc/krb5.keytab $principal || die 3 "Nepodarilo se ziskat listek pro principal '$principal'"
+
+# vytvoreni kontejneru, pokud existuje, tak to nevadi
+$SWIFT post -r $SWIFT_ADMINS pacct || die 4 "Nelze zalozit swift kontejner pacct"
+
+# vytvoreni timestamp souboru
+test -e `dirname $TSFILE` || mkdir -p `dirname $TSFILE`
+if [ ! -e $TSFILE ] ; then
+        # pro kontrolu jak stare soubory odeslat
+        touch -d "Thu Oct 31 10:23:31 CET 2000" $TSFILE
+fi
+
+# vyhledani souboru pro odliti dat
+FILES=`find $PACCTDIR -type f -newer $TSFILE -printf '%C@ %p\n' | sort -n | head -n-1 | awk '{print $2}'`
+if [ "x$FILES" = "x" ] ; then
+	die 5 "Nenalezen vhodny zdrojovy soubor v '$PACCTDIR', je zapnuty accounting?" 
+fi
+
+# zpracovani souboru
+TMPFILE=`mktemp -p /tmp pacct2.XXXXXXXX`
+for FILE in $FILES; do
+        case "$FILE" in
+                *.gz)
+                        CAT="zcat"
+                        GZIP="cat"
+                        ;;
+                *)
+                        CAT="cat"
+                        GZIP="gzip -c"
+                        ;;
+        esac
+
+	# test validity souboru
+        $CAT $FILE | /usr/bin/acct-meta-json > $TMPFILE
+        json_verify -q < $TMPFILE
+        RET="$?"
+        if [ "x$RET" != "x0" ] ; then
+                warn "Soubor '$TMPFILE' vznikly z '$FILE' neni JSON format! Preskakuji." 
+        fi
+
+	DST=`stat -c "%y" $FILE | awk 'BEGIN{FS="[ .]"}{gsub("-","/",$1); gsub(":","",$2)}{print $1"/"$2}'`
+	# odeslani souboru .json.gz a .pacct.gz
+
+	# upload json souboru
+	$GZIP "${TMPFILE}" > "${TMPFILE}.gz"
+	$SWIFT upload  --object-name ${DST}.json.gz pacct ${TMPFILE}.gz || die 6 "Nelze nahrat soubor '${TMPFILE}.gz' do '${DST}.json.gz'" 
+	
+	# upload original pacct souboru
+	$GZIP "$FILE" > "${TMPFILE}.gz"
+	$SWIFT upload  --object-name ${DST}.pacct.gz pacct ${TMPFILE}.gz || die 7 "Nelze nahrat soubor '$FILE' do '${DST}.pacct.gz'"
+
+	# uspech, je mozne posunout zamek
+	touch --reference=$FILE $TSFILE
+done
+
+# zacisteni
+rm -f -- "$TMPFILE" "${TMPFILE}.gz"
+rm -f -- "$krb5_cc"
+trap - EXIT
+exit 0
+

@@ -1,0 +1,88 @@
+#!/usr/bin/perl
+# skript parsuje pacct soubor (C struktura acct_v3) a bleje data v JSON formatu
+# pouziti: cat /var/log/account/pacct | ./macct.pl
+
+use JSON;
+use Data::Dumper;
+use Sys::Hostname;
+
+# dekodovaci rutina z typu comp_t na cislo, prevzato a upraveno
+# dle zdrojaku acct, soubor: pacct_rd.c, funkce: comp_t_2_double()
+# 
+#  comp_t are strange numbers -- of 16 bits, the first three are 
+#  the exponent and the last 13 are the number.  The exp is base 8
+sub decode_comp_t {
+        $c_num = shift;
+
+        my $in = 0;
+        
+        $in = $c_num & 017777;
+        $c_num >>= 13;
+
+        while ($c_num) {
+                $c_num--;
+                $in <<= 3;
+        }
+
+        return $in;
+}
+
+# --------------------------------------------------------- main -------------
+
+
+my %data = (hostname => hostname);
+my @procs = ();
+
+$/ = \64; # delka zaznamu v souboru
+while (my $acct = <>) {
+
+        # dle struktury acct_v3 v /usr/include/i386-linux-gnu/sys/acct.h
+        # dalsi detaily v /usr/src/linux/kernel/acct.c
+        my ( $flag, $version, $tty, $exitcode, $uid, $gid, $pid, $ppid,
+             $btime, $etime, $utime, $stime, 
+             $mem, $io, $rw, $minflt, $majflt, $swaps, $comm
+	   ) = unpack("C2SL6fS8A16", $acct);
+
+	if ($version ne 3) { 
+		warn "Process accounting on '$data{hostname}' has data in unknown version '$version' (skip):\nflag=$flag\nversion=$version\ntty=$tty\nexitcode=$exitcode\nuid=$uid\ngid=$gid\npid=$pid\nppid=$ppid\nbtime=$btime\netime=$etime\nutime=$utime\nstime=$stime\nmem=$mem\nio=$io\nrw=$rw\nminflt=$minflt\nmajflt=$majflt\nswaps=$swaps\ncomm=$comm\n";
+		next;
+	}
+        # filtry
+        next if $uid < 200;   # root a systemovi uzivatele nas nezajimaji, prvni uzivatel ma uid=200
+        next if $etime < 100; # vyjma rychlejsich nez 1 sec (mereno v setinach sekundy)
+
+        # konverze comp_t na neco realnejsiho, tyka se promennych:
+        # utime, stime, mem, io, rw, minflt, majflt, swaps
+        # viz /usr/include/linux/acct.h
+        $utime = decode_comp_t($utime);
+        $stime = decode_comp_t($stime);
+        $mem   = decode_comp_t($mem);
+        $io    = decode_comp_t($io);
+        $rw    = decode_comp_t($rw);
+        $minflt= decode_comp_t($minflt);
+        $majflt= decode_comp_t($majflt);
+        $swaps = decode_comp_t($swaps);
+
+        # vlozeni dat do struktury
+        push @procs, {  'command' => $comm, 
+                        'username' => (getpwuid("$uid"))[0] || "$uid",
+                        'exitcode' => $exitcode,
+                        'btime' => $btime,
+                        'utime' => $utime,
+                        'stime' => $stime,
+                        'etime' => $etime,
+                        'mem' => $mem,
+                        'rw' => $rw,
+                        'swaps' => $swaps,
+                        'pid' => $pid,
+                        'ppid' => $ppid 
+                     };
+}
+
+$data{processes} = \@procs;
+
+#print Dumper(\%data);
+print to_json(\%data);
+
+exit(0);
+
