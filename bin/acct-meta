@@ -80,11 +80,11 @@ else
 
 		# upload json souboru
 	#	$GZIP "${TMPFILE}" > "${TMPFILE}.gz"
-	#	$SWIFT upload  --object-name ${DST}.json.gz pacct ${TMPFILE}.gz || die 6 "Nelze nahrat soubor '${TMPFILE}.gz' do '${DST}.json.gz'" > /dev/null 
+	#	$SWIFT -q upload  --object-name ${DST}.json.gz pacct ${TMPFILE}.gz || die 6 "Nelze nahrat soubor '${TMPFILE}.gz' do '${DST}.json.gz'"  
 		
 		# upload original pacct souboru
 		$GZIP "$FILE" > "${TMPFILE}.gz"
-		$SWIFT upload  --object-name ${DST}.pacct.gz pacct ${TMPFILE}.gz || die 7 "Nelze nahrat soubor '$FILE' do '${DST}.pacct.gz'" > /dev/null
+		$SWIFT -q upload  --object-name ${DST}.pacct.gz pacct ${TMPFILE}.gz || die 7 "Nelze nahrat soubor '$FILE' do '${DST}.pacct.gz'" 
 		
 
 		# uspech, je mozne posunout zamek
@@ -114,10 +114,10 @@ else
 
 		# upload exportu a original atop souboru
 		atop -r "$FILE" -P ALL | gzip > "${TMPFILE}.gz"
-		$SWIFT upload  --object-name ${DST}.txt.${ATOPVERSION}.gz atop ${TMPFILE}.gz || die 8 "Nelze nahrat soubor '$FILE' do '${DST}.txt.${ATOPVERSION}.gz'" > /dev/null
+		$SWIFT -q upload  --object-name ${DST}.txt.${ATOPVERSION}.gz atop ${TMPFILE}.gz || die 8 "Nelze nahrat soubor '$FILE' do '${DST}.txt.${ATOPVERSION}.gz'"
 
 		gzip -c "$FILE" > "${TMPFILE}.gz"
-		$SWIFT upload  --object-name ${DST}.bin.${ATOPVERSION}.gz atop ${TMPFILE}.gz || die 9 "Nelze nahrat soubor '$FILE' do '${DST}.bin.${ATOPVERSION}.gz'" > /dev/null
+		$SWIFT -q upload  --object-name ${DST}.bin.${ATOPVERSION}.gz atop ${TMPFILE}.gz || die 9 "Nelze nahrat soubor '$FILE' do '${DST}.bin.${ATOPVERSION}.gz'" 
 
 		# uspech, je mozne posunout zamek
 		touch --reference=$FILE $TSATOP
