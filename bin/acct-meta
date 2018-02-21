@@ -1,8 +1,12 @@
 #!/bin/bash
 SWIFT=`which swift`
 SWIFT_ADMINS="pacctator\$pacctator"
-TSFILE=/var/lib/acct-meta/timestamp # timestamp soubor, ktery posledni se delal
+TSACCT=/var/lib/acct-meta/timestamp # timestamp soubor, ktery posledni se delal
+TSATOP=/var/lib/acct-meta/timestamp_atop # timestamp soubor pro atop
 PACCTDIR=/var/log/account/
+ATOPDIR=/var/log/atop/
+ATOPVERSION=`dpkg-query --showformat='${Version}' --show atop`
+TMPFILE=`mktemp -p /tmp acct-meta.XXXXXXXX`
 
 warn () {
     echo "$0:" "$@" >&2
@@ -20,7 +24,7 @@ test -x "$SWIFT" || die 1 "Neexistuje swift program, nelze nahrat data."
 
 # zalozeni promenne a docasneho souboru
 krb5_cc=$(mktemp -p /tmp -q krb5cc_pacct_XXXXXXXX) || die 2 "Nepodarilo se vytvorit docasny soubor '/tmp/krb5cc_pacct_*'." 
-trap "rm -f -- '$krb5_cc'" EXIT
+trap "rm -f -- '$krb5_cc' '$TMPFILE'" EXIT
 
 # ziskani listku, jako root nemam problem :-)
 export KRB5CCNAME=$krb5_cc
@@ -31,56 +35,94 @@ kinit -k -t /etc/krb5.keytab $principal || die 3 "Nepodarilo se ziskat listek pr
 
 # vytvoreni kontejneru, pokud existuje, tak to nevadi
 $SWIFT post -r $SWIFT_ADMINS pacct || die 4 "Nelze zalozit swift kontejner pacct"
+$SWIFT post -r $SWIFT_ADMINS atop || die 4 "Nelze zalozit swift kontejner pacct"
+
+#
+# PROCESS ACCOUNTING
+#
 
 # vytvoreni timestamp souboru
-test -e `dirname $TSFILE` || mkdir -p `dirname $TSFILE`
-if [ ! -e $TSFILE ] ; then
+test -e `dirname $TSACCT` || mkdir -p `dirname $TSACCT`
+if [ ! -e $TSACCT ] ; then
         # pro kontrolu jak stare soubory odeslat
-        touch -d "Thu Oct 31 10:23:31 CET 2000" $TSFILE
+        touch -d "Thu Oct 31 10:23:31 CET 2000" $TSACCT
 fi
 
 # vyhledani souboru pro odliti dat
-FILES=`find $PACCTDIR -type f -newer $TSFILE -printf '%C@ %p\n' | sort -n | head -n-1 | awk '{print $2}'`
+FILES=`find $PACCTDIR -type f -newer $TSACCT -printf '%C@ %p\n' | sort -n | head -n-1 | awk '{print $2}'`
 if [ "x$FILES" = "x" ] ; then
-	die 5 "Nenalezen vhodny zdrojovy soubor v '$PACCTDIR', je zapnuty accounting?" 
+	warn "Nenalezen vhodny zdrojovy soubor v '$PACCTDIR', je zapnuty accounting?" 
+else
+	# zpracovani accounting souboru
+	for FILE in $FILES; do
+		case "$FILE" in
+			*.gz)
+				CAT="zcat"
+				GZIP="cat"
+				;;
+			*)
+				CAT="cat"
+				GZIP="gzip -c"
+				;;
+		esac
+
+		# test validity souboru
+	#        $CAT $FILE | /usr/bin/acct-meta-json > $TMPFILE
+	#        json_verify -q < $TMPFILE
+	#        RET="$?"
+	#        if [ "x$RET" != "x0" ] ; then
+	#                warn "Soubor '$TMPFILE' vznikly z '$FILE' neni JSON format! Preskakuji." 
+	#        fi
+
+		DST=`stat -c "%y" $FILE | awk 'BEGIN{FS="[ .]"}{gsub("-","/",$1); gsub(":","",$2)}{print $1"/"$2}'`
+
+		# odeslani souboru .json.gz a .pacct.gz
+
+		# upload json souboru
+	#	$GZIP "${TMPFILE}" > "${TMPFILE}.gz"
+	#	$SWIFT upload  --object-name ${DST}.json.gz pacct ${TMPFILE}.gz || die 6 "Nelze nahrat soubor '${TMPFILE}.gz' do '${DST}.json.gz'" > /dev/null 
+		
+		# upload original pacct souboru
+		$GZIP "$FILE" > "${TMPFILE}.gz"
+		$SWIFT upload  --object-name ${DST}.pacct.gz pacct ${TMPFILE}.gz || die 7 "Nelze nahrat soubor '$FILE' do '${DST}.pacct.gz'" > /dev/null
+		
+
+		# uspech, je mozne posunout zamek
+		touch --reference=$FILE $TSACCT
+	done
 fi
 
-# zpracovani souboru
-TMPFILE=`mktemp -p /tmp pacct2.XXXXXXXX`
-for FILE in $FILES; do
-        case "$FILE" in
-                *.gz)
-                        CAT="zcat"
-                        GZIP="cat"
-                        ;;
-                *)
-                        CAT="cat"
-                        GZIP="gzip -c"
-                        ;;
-        esac
+#
+# ATOP
+#
 
-	# test validity souboru
-        $CAT $FILE | /usr/bin/acct-meta-json > $TMPFILE
-        json_verify -q < $TMPFILE
-        RET="$?"
-        if [ "x$RET" != "x0" ] ; then
-                warn "Soubor '$TMPFILE' vznikly z '$FILE' neni JSON format! Preskakuji." 
-        fi
+# vytvoreni timestamp souboru pokud neexistuje
+test -e `dirname $TSATOP` || mkdir -p `dirname $TSATOP`
+if [ ! -e $TSATOP ] ; then
+        # pro kontrolu jak stare soubory odeslat
+        touch -d "Thu Oct 31 10:23:31 CET 2000" $TSATOP
+fi
 
-	DST=`stat -c "%y" $FILE | awk 'BEGIN{FS="[ .]"}{gsub("-","/",$1); gsub(":","",$2)}{print $1"/"$2}'`
-	# odeslani souboru .json.gz a .pacct.gz
+# vyhledani souboru pro odliti dat
+FILES=`find $ATOPDIR -type f -newer $TSATOP -name 'atop*' -printf '%C@ %p\n' | sort -n | head -n-1 | awk '{print $2}'`
+if [ "x$FILES" = "x" ] ; then
+	warn "Nenalezen vhodny zdrojovy soubor v '$ATOPDIR', je zapnuty atop?" 
+else
+	# zpracovani accounting souboru
+	for FILE in $FILES; do
+		DST=`stat -c "%y" $FILE | awk 'BEGIN{FS="[ .]"}{gsub("-","/",$1); gsub(":","",$2)}{print $1"/"$2}'`
 
-	# upload json souboru
-	$GZIP "${TMPFILE}" > "${TMPFILE}.gz"
-	$SWIFT upload  --object-name ${DST}.json.gz pacct ${TMPFILE}.gz || die 6 "Nelze nahrat soubor '${TMPFILE}.gz' do '${DST}.json.gz'" 
-	
-	# upload original pacct souboru
-	$GZIP "$FILE" > "${TMPFILE}.gz"
-	$SWIFT upload  --object-name ${DST}.pacct.gz pacct ${TMPFILE}.gz || die 7 "Nelze nahrat soubor '$FILE' do '${DST}.pacct.gz'"
+		# upload exportu a original atop souboru
+		atop -r "$FILE" -P ALL | gzip > "${TMPFILE}.gz"
+		$SWIFT upload  --object-name ${DST}.txt.${ATOPVERSION}.gz atop ${TMPFILE}.gz || die 8 "Nelze nahrat soubor '$FILE' do '${DST}.txt.${ATOPVERSION}.gz'" > /dev/null
 
-	# uspech, je mozne posunout zamek
-	touch --reference=$FILE $TSFILE
-done
+		gzip -c "$FILE" > "${TMPFILE}.gz"
+		$SWIFT upload  --object-name ${DST}.bin.${ATOPVERSION}.gz atop ${TMPFILE}.gz || die 9 "Nelze nahrat soubor '$FILE' do '${DST}.bin.${ATOPVERSION}.gz'" > /dev/null
+
+		# uspech, je mozne posunout zamek
+		touch --reference=$FILE $TSATOP
+	done
+fi
 
 # zacisteni
 rm -f -- "$TMPFILE" "${TMPFILE}.gz"

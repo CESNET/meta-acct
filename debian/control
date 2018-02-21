@@ -8,7 +8,8 @@ Homepage: https://github.com/CESNET/meta-acct
 
 Package: acct-meta
 Architecture: all
-Depends: acct, libjson-perl, yajl-tools, ${perl:Depends}, ${misc:Depends}, python-swiftclient-kerberos 
+Depends: acct, ${perl:Depends}, ${misc:Depends}, python-swiftclient-kerberos, atop, coreutils, dpkg, gawk, krb5-user | heimdal-clients, findutils, gzip
+Recomends: libjson-perl, yajl-tools 
 Description: MetaCentrum process accounting
  Reading, filtering and sending process accounting via SWIFT client
  to cloud storage.

@@ -2,8 +2,10 @@ acct-meta (0.2.0) UNRELEASED; urgency=medium
 
   * nova verze accountingu
   * prechod z rsh na swift
+  * vypnuti kontroly validity pacct souboru
+  * pridani odesilani atop informaci
 
- -- Michal Svamberg <svamberg@civ.zcu.cz>  Thu, 3 Feb 2018 23:07:56 +0100
+ -- Michal Svamberg <svamberg@civ.zcu.cz>  Wed, 21 Feb 2018 08:53:15 +0100
 
 acct-meta (0.1.31~deb8) UNRELEASED; urgency=medium
 
