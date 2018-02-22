@@ -1,3 +1,10 @@
+acct-meta (0.2.2) UNRELEASED; urgency=medium
+
+  [ Michal Svamberg ]
+  * oprava nastaveni kerberos autentizace pro swift
+
+ -- Michal Svamberg <svamberg@civ.zcu.cz>  Thu, 22 Feb 2018 12:33:20 +0100
+
 acct-meta (0.2.1) UNRELEASED; urgency=medium
 
   * drobne upravy ve skriptu

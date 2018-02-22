@@ -1,12 +1,17 @@
 #!/bin/bash
 SWIFT=`which swift`
 SWIFT_ADMINS="pacctator\$pacctator"
-TSACCT=/var/lib/acct-meta/timestamp # timestamp soubor, ktery posledni se delal
+TSOLD=/var/lib/acct-meta/timestamp # timestamp soubor, monitoruje nagios
+TSACCT=/var/lib/acct-meta/timestamp_acct # timestamp soubor, ktery posledni se delal
 TSATOP=/var/lib/acct-meta/timestamp_atop # timestamp soubor pro atop
 PACCTDIR=/var/log/account/
 ATOPDIR=/var/log/atop/
 ATOPVERSION=`dpkg-query --showformat='${Version}' --show atop`
 TMPFILE=`mktemp -p /tmp acct-meta.XXXXXXXX`
+
+#vyzaduje swift  (kdo vyda token a prepnuti na kerberos)
+export ST_AUTH="https://hador.ics.muni.cz:8443/auth/1.0"
+export ST_KRB="1"
 
 warn () {
     echo "$0:" "$@" >&2
@@ -35,7 +40,7 @@ kinit -k -t /etc/krb5.keytab $principal || die 3 "Nepodarilo se ziskat listek pr
 
 # vytvoreni kontejneru, pokud existuje, tak to nevadi
 $SWIFT post -r $SWIFT_ADMINS pacct || die 4 "Nelze zalozit swift kontejner pacct"
-$SWIFT post -r $SWIFT_ADMINS atop || die 4 "Nelze zalozit swift kontejner pacct"
+$SWIFT post -r $SWIFT_ADMINS atop || die 5 "Nelze zalozit swift kontejner atop"
 
 #
 # PROCESS ACCOUNTING
@@ -89,6 +94,7 @@ else
 
 		# uspech, je mozne posunout zamek
 		touch --reference=$FILE $TSACCT
+		touch --reference=$FILE $TSOLD # nagios
 	done
 fi
 
