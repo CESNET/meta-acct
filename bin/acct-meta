@@ -55,9 +55,9 @@ fi
 
 # vyhledani souboru pro odliti dat
 FILES=`find $PACCTDIR -type f -newer $TSACCT -printf '%C@ %p\n' | sort -n | head -n-1 | awk '{print $2}'`
-if [ "x$FILES" = "x" ] ; then
-	warn "Nenalezen vhodny zdrojovy soubor v '$PACCTDIR', je zapnuty accounting?" 
-else
+#if [ "x$FILES" = "x" ] ; then
+#	warn "Nenalezen vhodny zdrojovy soubor v '$PACCTDIR', je zapnuty accounting?" 
+#else
 	# zpracovani accounting souboru
 	for FILE in $FILES; do
 		case "$FILE" in
@@ -96,7 +96,7 @@ else
 		touch --reference=$FILE $TSACCT
 		touch --reference=$FILE $TSOLD # nagios
 	done
-fi
+#fi
 
 #
 # ATOP
@@ -111,9 +111,9 @@ fi
 
 # vyhledani souboru pro odliti dat
 FILES=`find $ATOPDIR -type f -newer $TSATOP -name 'atop*' -printf '%C@ %p\n' | sort -n | head -n-1 | awk '{print $2}'`
-if [ "x$FILES" = "x" ] ; then
-	warn "Nenalezen vhodny zdrojovy soubor v '$ATOPDIR', je zapnuty atop?" 
-else
+#if [ "x$FILES" = "x" ] ; then
+#	warn "Nenalezen vhodny zdrojovy soubor v '$ATOPDIR', je zapnuty atop?" 
+#else
 	# zpracovani accounting souboru
 	for FILE in $FILES; do
 		DST=`stat -c "%y" $FILE | awk 'BEGIN{FS="[ .]"}{gsub("-","/",$1); gsub(":","",$2)}{print $1"/"$2}'`
@@ -128,7 +128,7 @@ else
 		# uspech, je mozne posunout zamek
 		touch --reference=$FILE $TSATOP
 	done
-fi
+#fi
 
 # zacisteni
 rm -f -- "$TMPFILE" "${TMPFILE}.gz"
