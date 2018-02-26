@@ -1,3 +1,11 @@
+acct-meta (0.2.3) UNRELEASED; urgency=medium
+
+  [ Michal Svamberg ]
+  * zkraceni cronu tak aby se data odeslala pred pulnoci nez vznikne novy atop
+  * zakomentovani testu pokud nejsou nelezeny soubory
+
+ -- Michal Svamberg <svamberg@civ.zcu.cz>  Mon, 26 Feb 2018 22:28:22 +0100
+
 acct-meta (0.2.2) UNRELEASED; urgency=medium
 
   [ Michal Svamberg ]
