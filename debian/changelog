@@ -1,3 +1,10 @@
+acct-meta (0.2.4) unstable; urgency=medium
+
+  [ Michal Svamberg ]
+  * pridani PATH do cron.d skriptu
+
+ -- Michal Svamberg <svamberg@civ.zcu.cz>  Tue, 25 Sep 2018 09:59:22 +0100
+
 acct-meta (0.2.3) UNRELEASED; urgency=medium
 
   [ Michal Svamberg ]
