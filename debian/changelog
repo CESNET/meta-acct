@@ -1,3 +1,10 @@
+acct-meta (0.2.5) unstable; urgency=medium
+
+  [ Michal Svamberg ]
+  * oprava ziskavani FQDN stroje
+
+ -- Michal Svamberg <svamberg@civ.zcu.cz>  Thu, 2 May 2019 15:38:02 +0100
+
 acct-meta (0.2.4) unstable; urgency=medium
 
   [ Michal Svamberg ]
