@@ -34,7 +34,8 @@ trap "rm -f -- '$krb5_cc' '$TMPFILE'" EXIT
 # ziskani listku, jako root nemam problem :-)
 export KRB5CCNAME=$krb5_cc
 krb5_realm=`awk -v host=$(hostname -f) 'BEGIN {parse=0; rel=10000}; /default_realm/ {realm = $3}; /^\[/ {if (parse == 1) { parse=0} }; /=/ {m=match(host, $1); if (m !=0  && parse == 1 ) { if (m <rel) {rel=m; realm=$3} } } ; /domain_realm/ {parse=1}; END {print realm}' /etc/krb5.conf`
-principal="host/$HOSTNAME@$krb5_realm"
+principal=`echo "host/"$(hostname -f)"@$krb5_realm"`
+#principal="host/$HOSTNAME@$krb5_realm"
 #principal="host/$HOSTNAME@`ktutil list | grep host/$HOSTNAME | awk -F '@' '{print $2}' | head -n 1`"
 kinit -k -t /etc/krb5.keytab $principal || die 3 "Nepodarilo se ziskat listek pro principal '$principal'"
 
